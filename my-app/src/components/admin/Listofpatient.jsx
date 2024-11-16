@@ -1,117 +1,179 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import Loader from "../common/Loader";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
-const ListOfPatients = () => {
-  const showListofPatientApi = "https://nightmarish-skeleton-q79j7pvj9qvwhxpp6-8080.app.github.dev/concerts";
+const Listofpatient = () => {
+  const showListofPatientApi =
+    "https://nightmarish-skeleton-q79j7pvj9qvwhxpp6-8080.app.github.dev/concerts";
+  const sendDataApi = "https://nightmarish-skeleton-q79j7pvj9qvwhxpp6-8080.app.github.dev/admin/sent";
 
   const [concerts, setConcerts] = useState([]);
+  const [selectedConcerts, setSelectedConcerts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedItems, setSelectedItems] = useState([]);
 
-  useEffect(() => {
-    const getConcerts = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await axios.get(showListofPatientApi);
-        setConcerts(data);
-      } catch (error) {
-        setError("Failed to fetch data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getConcerts();
-  }, []);
-
-  const handleSelect = (id) => {
-    if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
+  // Handle individual selection
+  const handleCheckboxChange = (id) => {
+    if (selectedConcerts.includes(id)) {
+      setSelectedConcerts(selectedConcerts.filter((concertId) => concertId !== id));
     } else {
-      setSelectedItems([...selectedItems, id]);
+      setSelectedConcerts([...selectedConcerts, id]);
     }
   };
 
+  // Handle Select All
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedItems(concerts.map((concert) => concert.id));
+      const allIds = concerts.map((concert) => concert.id);
+      setSelectedConcerts(allIds);
     } else {
-      setSelectedItems([]);
+      setSelectedConcerts([]);
     }
   };
 
-  const handleSendSelected = () => {
-    if (selectedItems.length === 0) {
+  // Handle Delete
+  const handleDelete = async (id) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${showListofPatientApi}/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete item");
+      }
+      setConcerts(concerts.filter((item) => item.id !== id));
+      setSelectedConcerts(selectedConcerts.filter((concertId) => concertId !== id));
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Submit (Send Selected Data)
+  const handleSubmit = async () => {
+    const selectedData = concerts.filter((concert) =>
+      selectedConcerts.includes(concert.id)
+    );
+
+    if (selectedData.length === 0) {
       alert("No items selected!");
       return;
     }
-    console.log("Sending items:", selectedItems);
-    alert(`Selected items: ${selectedItems.join(", ")}`);
+
+    try {
+      setIsLoading(true);
+      const response = await axios.post(sendDataApi, selectedData, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.status === 200) {
+        alert("Data sent successfully to VHV users!");
+        setSelectedConcerts([]); // Clear selected checkboxes
+      } else {
+        alert("Failed to send data.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while sending data.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (isLoading) return <Loader />;
-  if (concerts.length === 0 && !isLoading)
-    return (
-      <div className="text-center mt-5">
-        <h1>No Patients Found</h1>
-        <p className="text-muted">Try refreshing or adding new patients.</p>
-      </div>
-    );
+  useEffect(() => {
+    getConcerts();
+  }, []);
 
-  return (
-    <div className="container mt-5">
-      {error && <div className="alert alert-danger">{error}</div>}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-primary">Patient List</h2>
-      </div>
-      <table className="table table-hover table-bordered">
-        <thead className="table-light">
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                onChange={handleSelectAll}
-                checked={
-                  selectedItems.length === concerts.length && concerts.length > 0
-                }
-                aria-label="Select All"
-              />
-            </th>
-            <th>#</th>
-            <th>Title</th>
-            <th>Performer</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {concerts.map((concert, i) => (
-            <tr key={concert.id}>
-              <td>
+  const getConcerts = () => {
+    axios
+      .get(showListofPatientApi)
+      .then((res) => {
+        setConcerts(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  if (concerts.length === 0) {
+    return <h1 className="text-center mt-5">No Patient List found</h1>;
+  } else {
+    return (
+      <div className="container mt-5">
+        {isLoading && <Loader />}
+        {error && <p className="text-danger">Error: {error}</p>}
+
+        <h2 className="mb-4">List of Patients</h2>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <span className="text-muted">Selected: {selectedConcerts.length}</span>
+          </div>
+        </div>
+
+        <table className="table table-hover table-bordered">
+          <thead className="table-white">
+            <tr>
+              <th>
                 <input
                   type="checkbox"
-                  checked={selectedItems.includes(concert.id)}
-                  onChange={() => handleSelect(concert.id)}
-                  aria-label={`Select ${concert.title}`}
+                  onChange={handleSelectAll}
+                  checked={selectedConcerts.length === concerts.length && concerts.length > 0}
                 />
-              </td>
-              <td>{i + 1}</td>
-              <td>{concert.title}</td>
-              <td>{concert.performer}</td>
-              <td>{concert.date}</td>
+              </th>
+              <th>No.</th>
+              <th>Name</th>
+              <th>Phone number</th>
+              <th>Address</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <button
-          className="btn btn-primary"
-          onClick={handleSendSelected}
-          disabled={selectedItems.length === 0}
-        >
-          Send Selected
-        </button>
-    </div>
-  );
+          </thead>
+          <tbody>
+            {concerts.map((concert, i) => (
+              <tr key={concert.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedConcerts.includes(concert.id)}
+                    onChange={() => handleCheckboxChange(concert.id)}
+                  />
+                </td>
+                <td>{i + 1}</td>
+                <td>{concert.title}</td>
+                <td>{concert.performer}</td>
+                <td>{concert.date}</td>
+                <td>
+                  <Link
+                    to={`/admin/listofpatient/editlistofpatient/${concert.id}`}
+                    className="btn btn-sm btn me-2"
+                  >
+                    <i className="bi bi-pencil-square"></i> Edit
+                  </Link>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDelete(concert.id)}
+                  >
+                    <i className="bi bi-trash"></i> Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={selectedConcerts.length === 0}
+          >
+            Submit Selected
+          </button>
+      </div>
+    );
+  }
 };
 
-export default ListOfPatients;
+export default Listofpatient;
