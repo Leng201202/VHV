@@ -44,13 +44,22 @@ function App() {
             <Route path="/" element={<div>Dashboard</div>} />
             <Route path="/admin/listofpatient" element={<div>List of Patient</div>} />
             <Route path="/admin/recordeddata" element={<div>Recorded Data</div>} />
+            <Route path="/admin/dashboard" element={<Admin />} />
             <Route
-              path="/user/service"
+              path="/user/recordpatient"
+              element={<UserElement USER_TYPES={CURRENT_USER_TYPE}><div>Service</div></UserElement>}
+            />
+            <Route
+              path="/user/dashboard"
+              element={<UserElement USER_TYPES={CURRENT_USER_TYPE}><div>Service</div></UserElement>}
+            />
+            <Route
+              path="/user/history"
               element={<UserElement USER_TYPES={CURRENT_USER_TYPE}><div>Service</div></UserElement>}
             />
             <Route path="/login" element={<PublicElement><Login /></PublicElement>} />
             <Route path="/signup" element={<PublicElement><Signup /></PublicElement>} />
-            <Route path="/admin" element={<Admin />} />
+         
             <Route path="*" element={<PublicElement><PageNotFound /></PublicElement>} />
           </Routes>
         </div>
