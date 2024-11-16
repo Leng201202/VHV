@@ -1,96 +1,63 @@
-import {Routes,Route,useNavigate,useLocation} from 'react-router-dom'
-import {Menu} from 'antd';
-import {HomeOutlined,DashboardOutlined, UserOutlined, UnorderedListOutlined} from '@ant-design/icons';
-import './App.css'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import './App.css';
 import { Footer } from 'antd/es/layout/layout';
-import React,{useState} from 'react';
+import React, { useEffect } from 'react';
 import { Login } from './components/auth/Login';
-import  Signup  from './components/auth/Signup';
+import Signup from './components/auth/Signup';
 import PrivateRoute from './components/auth/PrivateRoute';
+import PageNotFound from './components/auth/PageNotFound';
+import Admin from './components/admin/Admin';
+import Header from './components/common/Header';
+import SideMenu from './components/common/SideMenu';
+import PublicElement from './components/RouteElement/PublicElement';
+import UserElement from './components/RouteElement/UserElement';
 
 function App() {
-  const location = useLocation(); // Get the current location
+  const USER_TYPES = {
+    PUBLIC: "Public User",
+    NORMAL_USER: "Normal User",
+    ADMIN_USER: "Admin User"
+  };
+
+  const CURRENT_USER_TYPE = USER_TYPES.NORMAL_USER; // Example: Current logged-in user type
+
+  const location = useLocation();
   const navigate = useNavigate();
 
-  // Check if the user is authenticated (replace with your actual authentication logic)
-  const isAuthenticated = localStorage.getItem('token') !== null; // Example using localStorage
+  const isAuthenticated = localStorage.getItem('token') !== true;
 
-  // Redirect to login if not authenticated and trying to access protected routes
-  if (!isAuthenticated && location.pathname !== '/login' && location.pathname !== '/signup') {
-    navigate('/login');
-  }
-  // Check if the current route is the login page
-  const isLoginPage = location.pathname === '/login';
-  const isSignup=location.pathname==='/signup';
+  useEffect(() => {
+    if (!isAuthenticated && location.pathname !== '/login' && location.pathname !== '/signup') {
+      navigate('/login');
+    }
+  }, [isAuthenticated, location.pathname, navigate]);
+
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+
   return (
     <>
-      <div>
-        {/* Only render Header, SideMenu, and Footer if not on the login page */}
-        {!isLoginPage &&!isSignup && <Header />}
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          {!isLoginPage && !isSignup && <SideMenu />}
-          <Content />
+      {!isAuthPage && <Header />}
+      <div style={{ display: 'flex', flexDirection: 'row' }}>
+        {!isAuthPage && <SideMenu />}
+        <div style={{ flex: 1, padding: '20px' }}>
+          <Routes>
+            <Route path="/" element={<div>Dashboard</div>} />
+            <Route path="/admin/listofpatient" element={<div>List of Patient</div>} />
+            <Route path="/admin/recordeddata" element={<div>Recorded Data</div>} />
+            <Route
+              path="/user/service"
+              element={<UserElement USER_TYPES={CURRENT_USER_TYPE}><div>Service</div></UserElement>}
+            />
+            <Route path="/login" element={<PublicElement><Login /></PublicElement>} />
+            <Route path="/signup" element={<PublicElement><Signup /></PublicElement>} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<PublicElement><PageNotFound /></PublicElement>} />
+          </Routes>
         </div>
-        {!isLoginPage && !isSignup && <Footer />}
       </div>
+      {!isAuthPage && <Footer />}
     </>
-  )
-}
-function Header(){
-  const navigate=useNavigate();
-    const [showMenu,setshowMenu]=useState(false)
-    const [token,setToken]=useState(true)
-  return<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",backgroundColor:"#87909E",height:"70px"}}>
-  <h2>VHV follow up </h2>
-
-  <div style={{display:"flex",gap:"20px",alignItems:"center"}}>
-      {
-          token
-          ? <div className='container'>
-              <img className='profile-image' src='https://www.pngkey.com/png/full/202-2024792_profile-icon-png.png' alt=''/>
-              <img className='settings-icon' src='https://th.bing.com/th/id/OIP.-nNvWLvx3MfEpdQM0iQjQQHaHa?rs=1&pid=ImgDetMain' alt=''/>
-              <div className='dropdown'>
-                  <div className='dropdown-content'>
-                      <p onClick={()=>navigate('my-profile')} className='dropdown-item'>Profile</p>
-                      <p onClick={()=>setToken(false)} className='dropdown-item'>Log out</p>
-                  </div>
-              </div>
-          </div>
-          : <button className='btn-login' onClick={()=>navigate('/login')} >Create Account</button>
-      }
-
-  </div>
-</div>
-
-}
-function Content(){
-  return ( <div>
-    <Routes>
-      <Route path='/' element={<PrivateRoute><div>Dashboard</div></PrivateRoute>}></Route>
-      <Route path='/admin/listofpatient' element={<PrivateRoute><div>List of Patient</div></PrivateRoute>}></Route>
-      <Route path='/admin/recordeddata' element={<PrivateRoute><div>Recorded Data</div></PrivateRoute>}></Route>
-      <Route path='/user/service' element={<PrivateRoute><div>Service</div></PrivateRoute>}></Route>
-      <Route path='/login' element={<Login/>}></Route>
-      <Route path='/signup' element={<Signup/>}></Route>
-      
-    </Routes>
-  </div>)
-}
-function SideMenu(){
-  const navigate=useNavigate();
-  return(
-            <Menu style={{backgroundColor:"#87909E",height:"115Vh",width:"200px"}} onClick={({key})=>{
-              navigate(key);
-
-              }} items={[
-              {label:"Dashboard",key:"/",icon:<HomeOutlined/>},
-              {label:"List of Patient",key:"/admin/listofpatient",icon:<DashboardOutlined/>},
-              {label:"Recorded Data",key:"/admin/recordeddata",icon:<UnorderedListOutlined/>}
-            ]}>
-
-            </Menu>
-            
-          );
+  );
 }
 
-export default App
+export default App;

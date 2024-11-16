@@ -2,7 +2,8 @@ import React,{useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import './Login.css'
 export const Login = () => {
-    const [username, setUsername] = useState('');
+  const loginApi="http://localhost:8080/api/auth/login";
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,13 +14,10 @@ export const Login = () => {
     setError('');
 
     try {
-        const response = await axios.post('/api/user/login', { username, password });
+        const response = await axios.post(loginApi, { username, password });
 
 
       if (response.status === 200) {
-        // Handle successful login, for example, by saving the token
-        const { token } = response.data;
-        localStorage.setItem('token', token); // Save token in local storage
         console.log('Login successful');
         navigate('/')
         
@@ -38,12 +36,12 @@ export const Login = () => {
         <form  onSubmit={handleLogin}>
         <h2>Log in</h2>
         {error && <p className="error-message">{error}</p>}
-        <label>Username or email address</label>
+        <label>Username</label>
         <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your email"
+            placeholder="Enter your Username"
             required
         />
         <label>Password</label>
@@ -59,7 +57,7 @@ export const Login = () => {
         </button>
         <div className="signup-admin">
             <p>Or</p>
-            <a href="/signup">Sign Up / Admin</a>
+            <a href="/signup">Sign Up</a>
         </div>
         </form>
         </div>

@@ -10,6 +10,7 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
   });
+  const signupApi="http://localhost:8080/api/auth/signup"
 
   const [errors, setErrors] = useState({});
 
@@ -27,7 +28,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     const { email, username, password, confirmPassword } = formData;
 
     let validationErrors = {};
