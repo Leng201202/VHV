@@ -1,94 +1,117 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom"; 
 import Loader from "../common/Loader";
 
-const Listofpatient = () => {
-  const showConcertApi = "https://nightmarish-skeleton-q79j7pvj9qvwhxpp6-8080.app.github.dev/concerts"; // Assuming this is your API endpoint
+const ListOfPatients = () => {
+  const showListofPatientApi = "https://nightmarish-skeleton-q79j7pvj9qvwhxpp6-8080.app.github.dev/concerts";
 
   const [concerts, setConcerts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const handelDelete = async (id) => {
-    console.log("id : -", id);
-    setIsLoading(true);
-    try {
-      const response = await fetch(showConcertApi.concat("/") + id, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete item");
-      }
-      setConcerts(concerts.filter((item) => item.id !== id));
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
+    const getConcerts = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await axios.get(showListofPatientApi);
+        setConcerts(data);
+      } catch (error) {
+        setError("Failed to fetch data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     getConcerts();
   }, []);
 
-  const getConcerts = () => {
-    axios
-      .get(showConcertApi)
-      .then((res) => {
-        setConcerts(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const handleSelect = (id) => {
+    if (selectedItems.includes(id)) {
+      setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
+    } else {
+      setSelectedItems([...selectedItems, id]);
+    }
   };
 
-  if (concerts.length === 0) { // Check if the array is empty
-    return <h1>No concerts found</h1>;
-  } else {
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedItems(concerts.map((concert) => concert.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleSendSelected = () => {
+    if (selectedItems.length === 0) {
+      alert("No items selected!");
+      return;
+    }
+    console.log("Sending items:", selectedItems);
+    alert(`Selected items: ${selectedItems.join(", ")}`);
+  };
+
+  if (isLoading) return <Loader />;
+  if (concerts.length === 0 && !isLoading)
     return (
-      <div className="mt-5">
-        {isLoading && <Loader />}
-        {error && <p>Error: {error}</p>}
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Performer</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {concerts.map((concert, i) => {
-              return (
-                <tr key={concert.id}> {/* Use concert.id as the key */}
-                  <td>{i + 1}</td>
-                  <td>{concert.title}</td>
-                  <td>{concert.performer}</td>
-                  <td>{concert.date}</td> 
-                  <td>
-                    <Link to={`/edit-concert/${concert.id}`}> {/* Use concert.id */}
-                      <i className="fa fa-pencil" aria-hidden="true"></i>
-                    </Link>
-                    <Link to={`/view-concert/${concert.id}`}> {/* Use concert.id */}
-                      <i className="fa fa-eye" aria-hidden="true"></i>
-                    </Link>
-                    <i
-                      className="fa fa-trash-o"
-                      aria-hidden="true"
-                      onClick={() => handelDelete(concert.id)}
-                    ></i>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="text-center mt-5">
+        <h1>No Patients Found</h1>
+        <p className="text-muted">Try refreshing or adding new patients.</p>
       </div>
     );
-  }
+
+  return (
+    <div className="container mt-5">
+      {error && <div className="alert alert-danger">{error}</div>}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="text-primary">Patient List</h2>
+      </div>
+      <table className="table table-hover table-bordered">
+        <thead className="table-light">
+          <tr>
+            <th>
+              <input
+                type="checkbox"
+                onChange={handleSelectAll}
+                checked={
+                  selectedItems.length === concerts.length && concerts.length > 0
+                }
+                aria-label="Select All"
+              />
+            </th>
+            <th>#</th>
+            <th>Title</th>
+            <th>Performer</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {concerts.map((concert, i) => (
+            <tr key={concert.id}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={selectedItems.includes(concert.id)}
+                  onChange={() => handleSelect(concert.id)}
+                  aria-label={`Select ${concert.title}`}
+                />
+              </td>
+              <td>{i + 1}</td>
+              <td>{concert.title}</td>
+              <td>{concert.performer}</td>
+              <td>{concert.date}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button
+          className="btn btn-primary"
+          onClick={handleSendSelected}
+          disabled={selectedItems.length === 0}
+        >
+          Send Selected
+        </button>
+    </div>
+  );
 };
 
-export default Listofpatient;
+export default ListOfPatients;
