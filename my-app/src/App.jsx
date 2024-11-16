@@ -11,6 +11,7 @@ import Header from './components/common/Header';
 import SideMenu from './components/common/SideMenu';
 import PublicElement from './components/RouteElement/PublicElement';
 import UserElement from './components/RouteElement/UserElement';
+import Listofpatient from './components/admin/Listofpatient';
 
 function App() {
   const USER_TYPES = {
@@ -42,7 +43,7 @@ function App() {
         <div style={{ flex: 1, padding: '20px' }}>
           <Routes>
             <Route path="/" element={<div>Dashboard</div>} />
-            <Route path="/admin/listofpatient" element={<div>List of Patient</div>} />
+            <Route path="/admin/listofpatient" element={<Listofpatient/>} />
             <Route path="/admin/recordeddata" element={<div>Recorded Data</div>} />
             <Route path="/admin/dashboard" element={<Admin />} />
             <Route
