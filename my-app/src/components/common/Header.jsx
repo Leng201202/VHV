@@ -4,7 +4,7 @@ function Header(){
     const navigate=useNavigate();
       const [token,setToken]=useState(true)
     return<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",backgroundColor:"#87909E",height:"70px"}}>
-    <h2>VHV follow up </h2>
+    <h2>VHV Admin </h2>
   
     <div style={{display:"flex",gap:"20px",alignItems:"center"}}>
         {
